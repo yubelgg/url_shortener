@@ -1,110 +1,5 @@
 # API Testing Guide
 
-## Test Coverage & Strategies
-
-| Component | Coverage | File |
-|-----------|----------|------|
-| `app/errors.py` | 85% | test_error_coverage.py |
-| `app/health.py` | 60% | test_error_coverage.py, test_health.py |
-| `app/routes/users.py` | 95%+ | test_users.py |
-| **Overall** | **78%** | All test files |
-
-**Total Tests:** 40+ automated tests  
-**Test Framework:** pytest  
-**Last Run:** April 4, 2026 - All Passed ✅
-
----
-
-## Test Methods by Module
-
-### Error Handling Tests (`test_error_coverage.py`)
-
-#### TestErrorHandlerRegistration
-- `test_400_bad_request()` - Tests 400 handler with missing required fields
-- `test_500_unhandled_exception()` - Tests that unhandled exceptions return 404
-- `test_invalid_json_causes_400()` - Tests malformed JSON triggers error handler
-
-#### TestErrorClassHierarchy
-- `test_validation_error_is_api_error()` - Validates ValidationError inherits from APIError
-- `test_not_found_error_is_api_error()` - Validates NotFoundError inherits from APIError
-- `test_internal_error_is_api_error()` - Validates InternalError inherits from APIError
-- `test_service_unavailable_error_is_api_error()` - Validates ServiceUnavailableError inherits from APIError
-- `test_error_to_dict_includes_error_key()` - Validates all errors include "error" key
-
-#### TestHealthCheckDegradation
-- `test_health_returns_status_field()` - Tests health response has status field
-- `test_health_returns_checks_field()` - Tests health response has checks field
-- `test_health_database_check_structure()` - Tests database check has proper structure
-
-#### TestErrorResponseFormat
-- `test_404_error_format()` - Tests 404 errors have consistent JSON format
-- `test_validation_error_format()` - Tests validation errors have consistent format
-- `test_multiple_errors_same_format()` - Tests different error types return same format
-
-#### TestHealthCheckEndpointDirectly
-- `test_health_always_returns_200()` - Tests /health always returns HTTP 200
-- `test_health_never_returns_error_status_code()` - Tests /health never returns 4xx or 5xx
-
----
-
-### Health Endpoint Tests (`test_health.py`)
-
-- `test_health()` - Tests /health endpoint returns 200 with status "ok"
-
----
-
-### User Tests (`test_users.py`)
-
-- `test_create_user()` - Tests POST /users creates user successfully
-- `test_create_user_missing_fields()` - Tests POST /users with empty body returns 400
-- `test_create_user_invalid_types()` - Tests POST /users with invalid types returns 400
-- `test_create_duplicate_user()` - Tests POST /users with duplicate username returns 400
-- `test_list_users()` - Tests GET /users returns paginated user list
-- `test_list_users_pagination()` - Tests GET /users with pagination parameters
-- `test_get_user()` - Tests GET /users/:id returns specific user
-- `test_get_user_not_found()` - Tests GET /users/:id with invalid ID returns 404
-- `test_update_user()` - Tests PUT /users/:id updates user
-- `test_update_user_not_found()` - Tests PUT /users/:id with invalid ID returns 404
-
----
-
-### Event Tests (`test_events.py`)
-
-- `test_list_events()` - Tests GET /events returns all events
-- `test_event_created_on_url_creation()` - Tests event created when URL is shortened
-
----
-
-## Running Tests
-
-### Run All Tests
-```bash
-uv run pytest tests/ -v
-```
-
-### Run Tests with Coverage Report
-```bash
-uv run pytest tests/ -v --cov=app.errors --cov=app.health --cov-report=term-missing
-```
-
-### Run Specific Test File
-```bash
-uv run pytest tests/test_error_coverage.py -v
-uv run pytest tests/test_users.py -v
-```
-
-### Run Specific Test Class
-```bash
-uv run pytest tests/test_error_coverage.py::TestErrorHandlerRegistration -v
-```
-
-### Run Specific Test
-```bash
-uv run pytest tests/test_users.py::test_create_user -v
-```
-
----
-
 ## Setup Commands
 
 ```bash
@@ -266,86 +161,94 @@ curl -s -X POST http://localhost:5001/urls \
 | GET    | /events           | List all events                 |
 
 ## Test Strategies Implemented
+# API Testing Guide
 
-### 1. Error Class Unit Tests
-- ✅ ValidationError returns 400 status code
-- ✅ NotFoundError returns 404 status code
-- ✅ InternalError returns 500 status code
-- ✅ ServiceUnavailableError returns 503 status code
-- ✅ All error classes inherit from APIError
-- ✅ Error.to_dict() includes "error" key
+## Test Methods by Module
 
-### 2. Global Error Handler Tests
-- ✅ 400 Bad Request handler returns JSON
-- ✅ 404 Not Found handler returns JSON
-- ✅ 500 Internal Server Error handler returns JSON
-- ✅ Generic exception handler catches crashes
-- ✅ All errors return JSON (not HTML)
-- ✅ Error handlers don't interfere with routes
+### Error Handling Tests (`test_error_coverage.py`)
 
-### 3. Health Endpoint Tests
-- ✅ /health always returns HTTP 200
-- ✅ /health returns valid JSON
-- ✅ /health response has "status" field
-- ✅ /health response has "checks" field
-- ✅ Database check structure is correct
-- ✅ Database check has proper status values (ok/error)
+#### TestErrorHandlerRegistration
+- `test_400_bad_request()` - Tests 400 handler with missing required fields
+- `test_500_unhandled_exception()` - Tests that unhandled exceptions return 404
+- `test_invalid_json_causes_400()` - Tests malformed JSON triggers error handler
 
-### 4. Invalid JSON Handling Tests
-- ✅ Malformed JSON returns 400 or 500
-- ✅ Empty JSON body handled gracefully
-- ✅ Invalid data types caught
-- ✅ Wrong type objects rejected
-- ✅ Non-JSON content rejected on all endpoints
+#### TestErrorClassHierarchy
+- `test_validation_error_is_api_error()` - Validates ValidationError inherits from APIError
+- `test_not_found_error_is_api_error()` - Validates NotFoundError inherits from APIError
+- `test_internal_error_is_api_error()` - Validates InternalError inherits from APIError
+- `test_service_unavailable_error_is_api_error()` - Validates ServiceUnavailableError inherits from APIError
+- `test_error_to_dict_includes_error_key()` - Validates all errors include "error" key
 
-### 5. Request Validation Tests
-- ✅ Missing required fields return 400
-- ✅ Invalid field types return 400
-- ✅ Duplicate users blocked
-- ✅ Non-existent resources return 404
-- ✅ Type validation on POST/PUT requests
+#### TestHealthCheckDegradation
+- `test_health_returns_status_field()` - Tests health response has status field
+- `test_health_returns_checks_field()` - Tests health response has checks field
+- `test_health_database_check_structure()` - Tests database check has proper structure
 
-### 6. Response Format Consistency Tests
-- ✅ All 404 errors have consistent format
-- ✅ All 400 errors have consistent format
-- ✅ All errors have "error" field
-- ✅ Content-Type is always application/json
-- ✅ No HTML error pages returned
+#### TestErrorResponseFormat
+- `test_404_error_format()` - Tests 404 errors have consistent JSON format
+- `test_validation_error_format()` - Tests validation errors have consistent format
+- `test_multiple_errors_same_format()` - Tests different error types return same format
 
-### 7. Error Response Payload Tests
-- ✅ APIError with custom payload
-- ✅ Error messages are descriptive
-- ✅ Status codes are correct
-- ✅ Error dict includes all payload fields
+#### TestHealthCheckEndpointDirectly
+- `test_health_always_returns_200()` - Tests /health always returns HTTP 200
+- `test_health_never_returns_error_status_code()` - Tests /health never returns 4xx or 5xx
 
-### 8. Edge Case Tests
-- ✅ Non-existent routes return 404
-- ✅ Multiple 404 requests all return JSON
-- ✅ Invalid endpoints handled gracefully
-- ✅ Bad JSON on multiple endpoints
-- ✅ Type mismatches caught
+---
 
-### 9. Health Check Details Tests
-- ✅ Health response has all required fields
-- ✅ Health status has valid values (ok/degraded/error)
-- ✅ Database check status is present
-- ✅ Health checks are always valid JSON
-- ✅ Never returns 4xx or 5xx status codes
+### Health Endpoint Tests (`test_health.py`)
 
-### 10. Database Connectivity Tests
-- ✅ Database check succeeds when DB is up
-- ✅ Database check catches connection failures
-- ✅ Health endpoint indicates degraded state on DB failure
-- ✅ Errors include message details
+- `test_health()` - Tests /health endpoint returns 200 with status "ok"
 
-### 11. Integration Tests
-- ✅ API error handlers catch validation errors
-- ✅ Health endpoint provides detailed info
-- ✅ Multiple consecutive requests work correctly
-- ✅ Error handlers don't crash the application
+---
 
-### 12. Content Type Tests
-- ✅ All error responses are application/json
-- ✅ 404 responses are JSON not HTML
-- ✅ Health responses are JSON
-- ✅ No HTML error pages
+### User Tests (`test_users.py`)
+
+- `test_create_user()` - Tests POST /users creates user successfully
+- `test_create_user_missing_fields()` - Tests POST /users with empty body returns 400
+- `test_create_user_invalid_types()` - Tests POST /users with invalid types returns 400
+- `test_create_duplicate_user()` - Tests POST /users with duplicate username returns 400
+- `test_list_users()` - Tests GET /users returns paginated user list
+- `test_list_users_pagination()` - Tests GET /users with pagination parameters
+- `test_get_user()` - Tests GET /users/:id returns specific user
+- `test_get_user_not_found()` - Tests GET /users/:id with invalid ID returns 404
+- `test_update_user()` - Tests PUT /users/:id updates user
+- `test_update_user_not_found()` - Tests PUT /users/:id with invalid ID returns 404
+
+---
+
+### Event Tests (`test_events.py`)
+
+- `test_list_events()` - Tests GET /events returns all events
+- `test_event_created_on_url_creation()` - Tests event created when URL is shortened
+
+---
+
+## Running Tests
+
+### Run All Tests
+```bash
+uv run pytest tests/ -v
+```
+
+### Run Tests with Coverage Report
+```bash
+uv run pytest tests/ -v --cov=app.errors --cov=app.health --cov-report=term-missing
+```
+
+### Run Specific Test File
+```bash
+uv run pytest tests/test_error_coverage.py -v
+uv run pytest tests/test_users.py -v
+```
+
+### Run Specific Test Class
+```bash
+uv run pytest tests/test_error_coverage.py::TestErrorHandlerRegistration -v
+```
+
+### Run Specific Test
+```bash
+uv run pytest tests/test_users.py::test_create_user -v
+```
+
+---
