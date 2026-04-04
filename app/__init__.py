@@ -18,7 +18,10 @@ def create_app():
 
     with app.app_context():
         db.connect(reuse_if_open=True)
-        db.create_tables([User, Url, Event])
+        try:
+            db.create_tables([User, Url, Event])
+        except Exception:
+            pass  # Tables may already exist or user lacks CREATE permission
         if not db.is_closed():
             db.close()
 
