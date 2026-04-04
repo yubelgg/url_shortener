@@ -61,7 +61,7 @@ def create_user():
         (User.username == username) | (User.email == email)
     ).first()
     if existing_user:
-        return jsonify({"error": "User already exists"}), 400
+        return jsonify({"error": "Username or email already exists"}), 400
 
     try:
         user = User.create(

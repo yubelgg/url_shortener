@@ -1,0 +1,26 @@
+services:
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-admin}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-postgres}
+      POSTGRES_DB: ${DATABASE_NAME:-hackathon_db}
+    ports:
+      - "5432:5432"
+    networks:
+      - hackathon-network
+
+  app:
+    build: .
+    restart: always
+    ports:
+      - "5000:8080"
+    depends_on:
+      - db
+    networks:
+      - hackathon-network
+
+networks:
+  hackathon-network:
+    driver: bridge

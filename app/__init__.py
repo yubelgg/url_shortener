@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from flask import Flask, jsonify
+import os
 
 from app.database import db, init_db
 from app.errors import register_error_handlers
@@ -41,5 +42,12 @@ def create_app():
                 "status": "error",
                 "error": str(e)
             }), 503
+
+    # Register test-only route if in testing mode
+    if os.environ.get("FLASK_TESTING") == "true" or app.config.get("TESTING"):
+        @app.route("/test-500-error")
+        def test_500_error():
+            """Test-only endpoint to trigger 500 error handling."""
+            raise Exception("Test unhandled exception")
 
     return app
