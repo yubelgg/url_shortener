@@ -1,15 +1,19 @@
-import json
+import uuid
+
+
+def unique(prefix):
+    return f"{prefix}_{uuid.uuid4().hex[:8]}"
 
 
 def test_create_user(client):
+    name = unique("user")
     response = client.post("/users", json={
-        "username": "testuser123",
-        "email": "testuser123@example.com"
+        "username": name,
+        "email": f"{name}@example.com"
     })
     assert response.status_code == 201
     data = response.get_json()
-    assert data["username"] == "testuser123"
-    assert data["email"] == "testuser123@example.com"
+    assert data["username"] == name
 
 
 def test_create_user_missing_fields(client):
@@ -26,13 +30,14 @@ def test_create_user_invalid_types(client):
 
 
 def test_create_duplicate_user(client):
+    name = unique("dupe")
     client.post("/users", json={
-        "username": "dupeuser",
-        "email": "dupeuser@example.com"
+        "username": name,
+        "email": f"{name}@example.com"
     })
     response = client.post("/users", json={
-        "username": "dupeuser",
-        "email": "dupeuser@example.com"
+        "username": name,
+        "email": f"{name}@example.com"
     })
     assert response.status_code == 400
 
@@ -51,16 +56,17 @@ def test_list_users_pagination(client):
 
 
 def test_get_user(client):
-    # Create a user first
+    name = unique("getme")
     create = client.post("/users", json={
-        "username": "getme",
-        "email": "getme@example.com"
+        "username": name,
+        "email": f"{name}@example.com"
     })
+    assert create.status_code == 201
     user_id = create.get_json()["id"]
 
     response = client.get(f"/users/{user_id}")
     assert response.status_code == 200
-    assert response.get_json()["username"] == "getme"
+    assert response.get_json()["username"] == name
 
 
 def test_get_user_not_found(client):
@@ -69,17 +75,20 @@ def test_get_user_not_found(client):
 
 
 def test_update_user(client):
+    name = unique("update")
     create = client.post("/users", json={
-        "username": "updateme",
-        "email": "updateme@example.com"
+        "username": name,
+        "email": f"{name}@example.com"
     })
+    assert create.status_code == 201
     user_id = create.get_json()["id"]
 
+    new_name = unique("updated")
     response = client.put(f"/users/{user_id}", json={
-        "username": "updated_name"
+        "username": new_name
     })
     assert response.status_code == 200
-    assert response.get_json()["username"] == "updated_name"
+    assert response.get_json()["username"] == new_name
 
 
 def test_update_user_not_found(client):

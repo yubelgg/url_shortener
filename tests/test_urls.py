@@ -1,11 +1,22 @@
-def test_create_url(client):
-    # Create a user first
-    user = client.post("/users", json={
-        "username": "urluser",
-        "email": "urluser@example.com"
-    })
-    user_id = user.get_json()["id"]
+import uuid
 
+
+def unique(prefix):
+    return f"{prefix}_{uuid.uuid4().hex[:8]}"
+
+
+def create_test_user(client):
+    name = unique("urltest")
+    resp = client.post("/users", json={
+        "username": name,
+        "email": f"{name}@example.com"
+    })
+    assert resp.status_code == 201
+    return resp.get_json()["id"]
+
+
+def test_create_url(client):
+    user_id = create_test_user(client)
     response = client.post("/urls", json={
         "user_id": user_id,
         "original_url": "https://example.com",
@@ -39,17 +50,11 @@ def test_list_urls(client):
 
 
 def test_list_urls_filter_by_user(client):
-    user = client.post("/users", json={
-        "username": "filteruser",
-        "email": "filteruser@example.com"
-    })
-    user_id = user.get_json()["id"]
-
+    user_id = create_test_user(client)
     client.post("/urls", json={
         "user_id": user_id,
         "original_url": "https://filtered.com"
     })
-
     response = client.get(f"/urls?user_id={user_id}")
     assert response.status_code == 200
     data = response.get_json()
@@ -57,16 +62,12 @@ def test_list_urls_filter_by_user(client):
 
 
 def test_get_url(client):
-    user = client.post("/users", json={
-        "username": "geturluser",
-        "email": "geturluser@example.com"
-    })
-    user_id = user.get_json()["id"]
-
+    user_id = create_test_user(client)
     create = client.post("/urls", json={
         "user_id": user_id,
         "original_url": "https://getme.com"
     })
+    assert create.status_code == 201
     url_id = create.get_json()["id"]
 
     response = client.get(f"/urls/{url_id}")
@@ -80,16 +81,12 @@ def test_get_url_not_found(client):
 
 
 def test_update_url(client):
-    user = client.post("/users", json={
-        "username": "updateurluser",
-        "email": "updateurluser@example.com"
-    })
-    user_id = user.get_json()["id"]
-
+    user_id = create_test_user(client)
     create = client.post("/urls", json={
         "user_id": user_id,
         "original_url": "https://old.com"
     })
+    assert create.status_code == 201
     url_id = create.get_json()["id"]
 
     response = client.put(f"/urls/{url_id}", json={

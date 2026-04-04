@@ -1,3 +1,10 @@
+import uuid
+
+
+def unique(prefix):
+    return f"{prefix}_{uuid.uuid4().hex[:8]}"
+
+
 def test_list_events(client):
     response = client.get("/events")
     assert response.status_code == 200
@@ -5,10 +12,12 @@ def test_list_events(client):
 
 
 def test_event_created_on_url_creation(client):
+    name = unique("eventuser")
     user = client.post("/users", json={
-        "username": "eventuser",
-        "email": "eventuser@example.com"
+        "username": name,
+        "email": f"{name}@example.com"
     })
+    assert user.status_code == 201
     user_id = user.get_json()["id"]
 
     client.post("/urls", json={
