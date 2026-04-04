@@ -11,12 +11,18 @@ class BaseModel(Model):
 
 
 def init_db(app):
+    sslmode = os.environ.get("DATABASE_SSLMODE")
+    extras = {}
+    if sslmode:
+        extras["sslmode"] = sslmode
+
     database = PostgresqlDatabase(
         os.environ.get("DATABASE_NAME", "hackathon_db"),
         host=os.environ.get("DATABASE_HOST", "localhost"),
         port=int(os.environ.get("DATABASE_PORT", 5432)),
         user=os.environ.get("DATABASE_USER", "postgres"),
         password=os.environ.get("DATABASE_PASSWORD", "postgres"),
+        **extras,
     )
     db.initialize(database)
 
