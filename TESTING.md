@@ -159,3 +159,96 @@ curl -s -X POST http://localhost:5001/urls \
 | POST   | /urls             | Create URL (generates short_code) |
 | PUT    | /urls/:id         | Update URL                      |
 | GET    | /events           | List all events                 |
+
+## Test Strategies Implemented
+# API Testing Guide
+
+## Test Methods by Module
+
+### Error Handling Tests (`test_error_coverage.py`)
+
+#### TestErrorHandlerRegistration
+- `test_400_bad_request()` - Tests 400 handler with missing required fields
+- `test_500_unhandled_exception()` - Tests that unhandled exceptions return 404
+- `test_invalid_json_causes_400()` - Tests malformed JSON triggers error handler
+
+#### TestErrorClassHierarchy
+- `test_validation_error_is_api_error()` - Validates ValidationError inherits from APIError
+- `test_not_found_error_is_api_error()` - Validates NotFoundError inherits from APIError
+- `test_internal_error_is_api_error()` - Validates InternalError inherits from APIError
+- `test_service_unavailable_error_is_api_error()` - Validates ServiceUnavailableError inherits from APIError
+- `test_error_to_dict_includes_error_key()` - Validates all errors include "error" key
+
+#### TestHealthCheckDegradation
+- `test_health_returns_status_field()` - Tests health response has status field
+- `test_health_returns_checks_field()` - Tests health response has checks field
+- `test_health_database_check_structure()` - Tests database check has proper structure
+
+#### TestErrorResponseFormat
+- `test_404_error_format()` - Tests 404 errors have consistent JSON format
+- `test_validation_error_format()` - Tests validation errors have consistent format
+- `test_multiple_errors_same_format()` - Tests different error types return same format
+
+#### TestHealthCheckEndpointDirectly
+- `test_health_always_returns_200()` - Tests /health always returns HTTP 200
+- `test_health_never_returns_error_status_code()` - Tests /health never returns 4xx or 5xx
+
+---
+
+### Health Endpoint Tests (`test_health.py`)
+
+- `test_health()` - Tests /health endpoint returns 200 with status "ok"
+
+---
+
+### User Tests (`test_users.py`)
+
+- `test_create_user()` - Tests POST /users creates user successfully
+- `test_create_user_missing_fields()` - Tests POST /users with empty body returns 400
+- `test_create_user_invalid_types()` - Tests POST /users with invalid types returns 400
+- `test_create_duplicate_user()` - Tests POST /users with duplicate username returns 400
+- `test_list_users()` - Tests GET /users returns paginated user list
+- `test_list_users_pagination()` - Tests GET /users with pagination parameters
+- `test_get_user()` - Tests GET /users/:id returns specific user
+- `test_get_user_not_found()` - Tests GET /users/:id with invalid ID returns 404
+- `test_update_user()` - Tests PUT /users/:id updates user
+- `test_update_user_not_found()` - Tests PUT /users/:id with invalid ID returns 404
+
+---
+
+### Event Tests (`test_events.py`)
+
+- `test_list_events()` - Tests GET /events returns all events
+- `test_event_created_on_url_creation()` - Tests event created when URL is shortened
+
+---
+
+## Running Tests
+
+### Run All Tests
+```bash
+uv run pytest tests/ -v
+```
+
+### Run Tests with Coverage Report
+```bash
+uv run pytest tests/ -v --cov=app.errors --cov=app.health --cov-report=term-missing
+```
+
+### Run Specific Test File
+```bash
+uv run pytest tests/test_error_coverage.py -v
+uv run pytest tests/test_users.py -v
+```
+
+### Run Specific Test Class
+```bash
+uv run pytest tests/test_error_coverage.py::TestErrorHandlerRegistration -v
+```
+
+### Run Specific Test
+```bash
+uv run pytest tests/test_users.py::test_create_user -v
+```
+
+---
