@@ -54,6 +54,15 @@ def create_user():
     if not data or not isinstance(data.get("username"), str) or not isinstance(data.get("email"), str):
         return jsonify({"error": "Invalid data. username and email must be strings"}), 400
 
+    username = data.get("username")
+    email = data.get("email")
+    
+    existing_user = User.select().where(
+        (User.username == username) | (User.email == email)
+    ).first()
+    if existing_user:
+        return jsonify({"error": "User already exists"}), 400
+
     try:
         user = User.create(
             username=data["username"],
