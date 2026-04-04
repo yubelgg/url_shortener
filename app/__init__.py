@@ -2,6 +2,8 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify
 
 from app.database import db, init_db
+from app.errors import register_error_handlers
+from app.health import perform_health_check
 from app.routes import register_routes
 
 
@@ -21,9 +23,23 @@ def create_app():
             db.close()
 
     register_routes(app)
+    register_error_handlers(app)
 
     @app.route("/health")
     def health():
-        return jsonify(status="ok")
+        """Health check endpoint with database validation."""
+        try:
+            health_status = perform_health_check()
+            
+            if health_status["status"] == "ok":
+                return jsonify(health_status), 200
+            else:
+                # Degraded state - still return 200 but indicate issues
+                return jsonify(health_status), 200
+        except Exception as e:
+            return jsonify({
+                "status": "error",
+                "error": str(e)
+            }), 503
 
     return app
