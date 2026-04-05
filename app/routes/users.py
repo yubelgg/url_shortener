@@ -24,6 +24,11 @@ def bulk_create_users():
     with db.atomic():
         for batch in chunked(rows, 100):
             User.insert_many(batch).execute()
+        # Advance sequence past any explicit IDs from the CSV so subsequent
+        # User.create() calls don't collide on the primary key.
+        db.execute_sql(
+            "SELECT setval('users_id_seq', COALESCE((SELECT MAX(id) FROM users), 1))"
+        )
 
     return jsonify({"count": len(rows)}), 201
 
