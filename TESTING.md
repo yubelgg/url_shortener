@@ -13,6 +13,12 @@ uv run run.py
 uv run seed.py
 ```
 
+All `curl` examples below use **port 5001**, which matches `run.py`.
+
+### Docker Compose (optional)
+
+After `docker compose up --build`, call the same paths on whatever **host** port you mapped to the app container (**8080** inside the container). For example, with `"5001:8080"` in `docker-compose.yml`, use `http://localhost:5001` in the commands below. Ensure the app service has `DATABASE_HOST` set to the Postgres service name (e.g. `db`) so the API can reach the database.
+
 ---
 
 ## Health Check
@@ -160,10 +166,7 @@ curl -s -X POST http://localhost:5001/urls \
 | PUT    | /urls/:id         | Update URL                      |
 | GET    | /events           | List all events                 |
 
-## Test Strategies Implemented
-# API Testing Guide
-
-## Test Methods by Module
+## Test strategies by module
 
 ### Error Handling Tests (`test_error_coverage.py`)
 

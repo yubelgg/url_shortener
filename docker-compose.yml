@@ -15,9 +15,15 @@ services:
     build: .
     restart: always
     ports:
-      - "5001:8000"
+      - "5001:8080"
     depends_on:
       - db
+    environment:
+      DATABASE_HOST: db
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: ${DATABASE_NAME:-hackathon_db}
+      DATABASE_USER: ${DATABASE_USER:-admin}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-postgres}
     networks:
       - hackathon-network
 
