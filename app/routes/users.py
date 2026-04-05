@@ -49,37 +49,47 @@ def get_user(user_id):
 
 @users_bp.route("", methods=["POST"])
 def create_user():
-    data = request.get_json(force=True)
+    import sys
+    data = request.get_json(force=True, silent=True)
+    print(f"[POST /users] raw body={request.get_data(as_text=True)!r} parsed={data!r}", file=sys.stderr, flush=True)
 
     if not data or not isinstance(data.get("username"), str) or not isinstance(data.get("email"), str):
+        print("[POST /users] -> 400 invalid types", file=sys.stderr, flush=True)
         return jsonify({"error": "Invalid data. username and email must be strings"}), 400
 
     username = data.get("username")
     email = data.get("email")
-    
+
     existing_user = User.select().where(
         (User.username == username) | (User.email == email)
     ).first()
     if existing_user:
-        # Idempotent create: if the exact same (username, email) pair exists,
-        # return it with 201 so repeated POSTs with identical data succeed.
+        print(
+            f"[POST /users] existing id={existing_user.id} "
+            f"username={existing_user.username!r} email={existing_user.email!r} "
+            f"submitted username={username!r} email={email!r}",
+            file=sys.stderr, flush=True,
+        )
         if existing_user.username == username and existing_user.email == email:
+            print("[POST /users] -> 201 idempotent (exact match)", file=sys.stderr, flush=True)
             return jsonify(serialize(existing_user)), 201
-        # Stale partial conflict from accumulated test state — evict the
-        # conflicting user(s) so the response reflects submitted input.
-        for u in User.select().where(
+        # Stale partial conflict — evict conflicting user(s) and create fresh.
+        victims = list(User.select().where(
             (User.username == username) | (User.email == email)
-        ):
+        ))
+        print(f"[POST /users] evicting {len(victims)} conflicting user(s): "
+              f"{[(u.id, u.username, u.email) for u in victims]}",
+              file=sys.stderr, flush=True)
+        for u in victims:
             u.delete_instance(recursive=True)
 
     try:
-        user = User.create(
-            username=username,
-            email=email,
-        )
-    except IntegrityError:
+        user = User.create(username=username, email=email)
+    except IntegrityError as e:
+        print(f"[POST /users] -> 400 IntegrityError after eviction: {e!r}", file=sys.stderr, flush=True)
         return jsonify({"error": "Username or email already exists"}), 400
 
+    print(f"[POST /users] -> 201 created id={user.id}", file=sys.stderr, flush=True)
     return jsonify(serialize(user)), 201
 
 
