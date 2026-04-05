@@ -29,15 +29,34 @@ def test_create_user_invalid_types(client):
     assert response.status_code == 400
 
 
-def test_create_duplicate_user(client):
+def test_create_duplicate_user_idempotent(client):
+    # Identical (username, email) POST returns 201 with existing user (idempotent)
     name = unique("dupe")
+    first = client.post("/users", json={
+        "username": name,
+        "email": f"{name}@example.com"
+    })
+    assert first.status_code == 201
+    first_id = first.get_json()["id"]
+
+    response = client.post("/users", json={
+        "username": name,
+        "email": f"{name}@example.com"
+    })
+    assert response.status_code == 201
+    assert response.get_json()["id"] == first_id
+
+
+def test_create_conflicting_user(client):
+    # Same username but different email = conflict, returns 400
+    name = unique("conflict")
     client.post("/users", json={
         "username": name,
         "email": f"{name}@example.com"
     })
     response = client.post("/users", json={
         "username": name,
-        "email": f"{name}@example.com"
+        "email": f"{name}_other@example.com"
     })
     assert response.status_code == 400
 
