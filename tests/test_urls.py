@@ -80,6 +80,27 @@ def test_get_url_not_found(client):
     assert response.status_code == 404
 
 
+def test_list_urls_excludes_inactive(client):
+    user_id = create_test_user(client)
+    a = client.post("/urls", json={
+        "user_id": user_id,
+        "original_url": "https://active-only.com",
+    })
+    b = client.post("/urls", json={
+        "user_id": user_id,
+        "original_url": "https://will-deactivate.com",
+    })
+    assert a.status_code == 201 and b.status_code == 201
+    inactive_id = b.get_json()["id"]
+    client.put(f"/urls/{inactive_id}", json={"is_active": False})
+
+    response = client.get(f"/urls?user_id={user_id}")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert len(data) == 1
+    assert data[0]["original_url"] == "https://active-only.com"
+
+
 def test_update_url(client):
     user_id = create_test_user(client)
     create = client.post("/urls", json={
@@ -97,6 +118,9 @@ def test_update_url(client):
     data = response.get_json()
     assert data["title"] == "New Title"
     assert data["is_active"] is False
+
+    inactive_get = client.get(f"/urls/{url_id}")
+    assert inactive_get.status_code == 404
 
 
 def test_update_url_not_found(client):
