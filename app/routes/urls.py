@@ -57,7 +57,7 @@ def create_url():
 
 @urls_bp.route("", methods=["GET"])
 def list_urls():
-    query = Url.select().order_by(Url.id)
+    query = Url.select().where(Url.is_active == True).order_by(Url.id)
 
     user_id = request.args.get("user_id", type=int)
     if user_id:
@@ -71,6 +71,8 @@ def get_url(url_id):
     try:
         url = Url.get_by_id(url_id)
     except Url.DoesNotExist:
+        return jsonify({"error": "URL not found"}), 404
+    if not url.is_active:
         return jsonify({"error": "URL not found"}), 404
     return jsonify(serialize(url))
 
