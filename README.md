@@ -41,6 +41,20 @@ docker compose up --build
 
 App on **http://localhost:5001** (host) → container **8080**. Postgres is reachable inside Compose as host **`db`**.
 
+## Live deployment (DigitalOcean)
+
+**Base URL:** [https://urlshortener-rp6zs.ondigitalocean.app](https://urlshortener-rp6zs.ondigitalocean.app)
+
+The app is wired for **continuous deployment**: new commits pushed to the connected branch (typically **`main`**) trigger an automatic redeploy on DigitalOcean App Platform.
+
+Quick checks (use **`https`**):
+
+```bash
+curl -sS "https://urlshortener-rp6zs.ondigitalocean.app/health"
+```
+
+Keep **local** URLs (`localhost:5001`, Docker Compose) for development; use the **deployed URL** above for demos and judges hitting production.
+
 ## Tests & coverage
 
 ```bash
