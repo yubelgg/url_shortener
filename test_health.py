@@ -75,7 +75,8 @@ class TestErrorHandlers:
         """Test invalid JSON on users endpoint."""
         response = client.post("/users", data="invalid", 
                               headers={"Content-Type": "application/json"})
-        assert response.status_code in [400, 500]
+        assert response.status_code == 400
+        assert "error" in response.get_json()
 
 
 class TestErrorClasses:

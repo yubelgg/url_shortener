@@ -12,9 +12,14 @@ from app.errors import (
 @pytest.fixture
 def app():
     """Create Flask app for testing."""
+    # Import os to set env var before app creation
+    import os
+    os.environ["FLASK_TESTING"] = "true"
     app = create_app()
     app.config["TESTING"] = True
-    return app
+    yield app
+    # Cleanup
+    del os.environ["FLASK_TESTING"]
 
 
 @pytest.fixture
@@ -34,7 +39,14 @@ class TestErrorHandlerRegistration:
     
     def test_500_unhandled_exception(self, client):
         """Test that unhandled exceptions return 500."""
-        response = client.get("/nonexistent-endpoint-should-404")
+        response = client.get("/test-500-error")
+        assert response.status_code == 500
+        assert response.content_type == "application/json"
+        assert "error" in response.get_json()
+    
+    def test_404_missing_route(self, client):
+        """Test that missing routes return 404."""
+        response = client.get("/nonexistent-endpoint")
         assert response.status_code == 404
         assert response.content_type == "application/json"
     

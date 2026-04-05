@@ -169,7 +169,8 @@ curl -s -X POST http://localhost:5001/urls \
 
 #### TestErrorHandlerRegistration
 - `test_400_bad_request()` - Tests 400 handler with missing required fields
-- `test_500_unhandled_exception()` - Tests that unhandled exceptions return 404
+- `test_500_unhandled_exception()` - Tests that unhandled exceptions return 500 with JSON error
+- `test_404_missing_route()` - Tests that missing routes return 404 with JSON response
 - `test_invalid_json_causes_400()` - Tests malformed JSON triggers error handler
 
 #### TestErrorClassHierarchy
@@ -252,3 +253,21 @@ uv run pytest tests/test_users.py::test_create_user -v
 ```
 
 ---
+
+### With Docker (Recommended)
+
+```bash
+# Run all tests
+docker exec -it url_shortener-app-1 uv run pytest tests/ -v
+
+# Run tests with coverage report
+docker exec -it url_shortener-app-1 uv run pytest tests/ -v --cov=app.errors --cov=app.health --cov-report=term-missing
+
+# Run specific test file
+docker exec -it url_shortener-app-1 uv run pytest tests/test_error_coverage.py -v
+
+# Run specific test class
+docker exec -it url_shortener-app-1 uv run pytest tests/test_error_coverage.py::TestErrorHandlerRegistration -v
+
+# Run specific test
+docker exec -it url_shortener-app-1 uv run pytest tests/test_users.py::test_create_user -v
