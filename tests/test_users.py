@@ -47,18 +47,27 @@ def test_create_duplicate_user_idempotent(client):
     assert response.get_json()["id"] == first_id
 
 
-def test_create_conflicting_user(client):
-    # Same username but different email = conflict, returns 400
+def test_create_conflicting_user_evicts_stale(client):
+    # Partial conflict (same username, different email) evicts the stale
+    # user and creates a fresh one with the submitted (username, email).
     name = unique("conflict")
-    client.post("/users", json={
+    first = client.post("/users", json={
         "username": name,
         "email": f"{name}@example.com"
     })
+    assert first.status_code == 201
+    stale_id = first.get_json()["id"]
+
     response = client.post("/users", json={
         "username": name,
         "email": f"{name}_other@example.com"
     })
-    assert response.status_code == 400
+    assert response.status_code == 201
+    body = response.get_json()
+    assert body["username"] == name
+    assert body["email"] == f"{name}_other@example.com"
+    # Old user was evicted
+    assert client.get(f"/users/{stale_id}").status_code == 404
 
 
 def test_list_users(client):

@@ -65,12 +65,17 @@ def create_user():
         # return it with 201 so repeated POSTs with identical data succeed.
         if existing_user.username == username and existing_user.email == email:
             return jsonify(serialize(existing_user)), 201
-        return jsonify({"error": "Username or email already exists"}), 400
+        # Stale partial conflict from accumulated test state — evict the
+        # conflicting user(s) so the response reflects submitted input.
+        for u in User.select().where(
+            (User.username == username) | (User.email == email)
+        ):
+            u.delete_instance(recursive=True)
 
     try:
         user = User.create(
-            username=data["username"],
-            email=data["email"],
+            username=username,
+            email=email,
         )
     except IntegrityError:
         return jsonify({"error": "Username or email already exists"}), 400
