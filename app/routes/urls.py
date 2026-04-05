@@ -144,7 +144,7 @@ def redirect_short_code(short_code):
     except Url.DoesNotExist:
         return jsonify({"error": "Short code not found"}), 404
     if not url.is_active:
-        return jsonify({"error": "URL is inactive"}), 410
+        return jsonify({"error": "Short code not found"}), 404
     try:
         Event.create(
             url_id=url,

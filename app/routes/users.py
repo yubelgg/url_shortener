@@ -61,6 +61,10 @@ def create_user():
         (User.username == username) | (User.email == email)
     ).first()
     if existing_user:
+        # Idempotent create: if the exact same (username, email) pair exists,
+        # return it with 201 so repeated POSTs with identical data succeed.
+        if existing_user.username == username and existing_user.email == email:
+            return jsonify(serialize(existing_user)), 201
         return jsonify({"error": "Username or email already exists"}), 400
 
     try:
