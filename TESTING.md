@@ -112,6 +112,16 @@ curl -s -X PUT http://localhost:5001/urls/1 \
   -d '{"title": "Updated Title", "is_active": false}'
 ```
 
+### Follow a short link (redirect)
+
+Replace `SHORT` with a real `short_code` from `POST /urls` or `GET /urls`.
+
+```bash
+curl -sI http://localhost:5001/r/SHORT
+```
+
+Expect **302** with a `Location` header when the URL exists and is active.
+
 ---
 
 ## Events
@@ -165,6 +175,7 @@ curl -s -X POST http://localhost:5001/urls \
 | POST   | /urls             | Create URL (generates short_code) |
 | PUT    | /urls/:id         | Update URL                      |
 | GET    | /events           | List all events                 |
+| GET    | /r/:short_code    | Resolve short code → 302 to target (logs `clicked` event) |
 
 ## Test strategies by module
 
