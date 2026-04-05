@@ -1,6 +1,7 @@
 """Error handling utilities for clean JSON responses."""
 
 from flask import jsonify
+from werkzeug.exceptions import HTTPException
 
 
 class APIError(Exception):
@@ -75,11 +76,16 @@ def register_error_handlers(app):
     @app.errorhandler(Exception)
     def handle_generic_exception(error):
         """Catch unhandled exceptions and return clean JSON."""
+        if isinstance(error, HTTPException):
+            response = jsonify({"error": error.description})
+            response.status_code = error.code
+            return response
+
         import traceback
-        
+
         # Log the error for debugging
         traceback.print_exc()
-        
+
         response = jsonify({
             "error": "An unexpected error occurred",
             "type": error.__class__.__name__
