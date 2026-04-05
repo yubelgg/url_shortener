@@ -52,4 +52,4 @@ jobs:
         run: uv run pytest tests/ -v
 
       - name: Run tests with coverage
-        run: uv run pytest tests/ --cov=app --cov-report=term-missing
+        run: uv run pytest tests/ --cov=app --cov-report=term-missing --cov-fail-under=70
