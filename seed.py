@@ -5,15 +5,21 @@ import os
 from dotenv import load_dotenv
 from peewee import PostgresqlDatabase, chunked
 
-load_dotenv()
+load_dotenv(override=False)  # Don't override env vars passed on command line
 
 # Connect directly (not through Flask app context)
+sslmode = os.environ.get("DATABASE_SSLMODE")
+extras = {}
+if sslmode:
+    extras["sslmode"] = sslmode
+
 db = PostgresqlDatabase(
     os.environ.get("DATABASE_NAME", "hackathon_db"),
     host=os.environ.get("DATABASE_HOST", "localhost"),
     port=int(os.environ.get("DATABASE_PORT", 5432)),
     user=os.environ.get("DATABASE_USER", "postgres"),
     password=os.environ.get("DATABASE_PASSWORD", "postgres"),
+    **extras,
 )
 
 from app.models.user import User

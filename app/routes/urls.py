@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, redirect, request
 from peewee import IntegrityError
 
 from app.helpers import serialize
@@ -125,3 +125,33 @@ def update_url(url_id):
     url.save()
 
     return jsonify(serialize(url))
+
+
+@urls_bp.route("/<int:url_id>", methods=["DELETE"])
+def delete_url(url_id):
+    try:
+        url = Url.get_by_id(url_id)
+    except Url.DoesNotExist:
+        return jsonify({"error": "URL not found"}), 404
+    url.delete_instance(recursive=True)
+    return "", 204
+
+
+@urls_bp.route("/<string:short_code>/redirect", methods=["GET"])
+def redirect_short_code(short_code):
+    try:
+        url = Url.get(Url.short_code == short_code)
+    except Url.DoesNotExist:
+        return jsonify({"error": "Short code not found"}), 404
+    if not url.is_active:
+        return jsonify({"error": "URL is inactive"}), 410
+    try:
+        Event.create(
+            url_id=url,
+            user_id=None,
+            event_type="click",
+            details={"short_code": short_code},
+        )
+    except Exception:
+        pass
+    return redirect(url.original_url, code=301)
